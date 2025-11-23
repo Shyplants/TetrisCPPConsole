@@ -1,0 +1,10 @@
+.vs/
+*.exe
+*.dll
+*.pdb
+/Debug/
+/Release/
+/x64/
+*.obj
+*.log
+.idea/

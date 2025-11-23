@@ -1,0 +1,28 @@
+Tetrio Retro Pack – 8bJackie  
+© [Year] 8bJackie  
+Hosted via “You Have Fail @ TETR.IO PLUS” by UniQMG (https://you.have.fail/ed/at/tetrioplus/)  
+
+This pack of audio / sound effect assets is provided for inclusion in your game or project under the following conditions:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this audio pack (the “Assets”), to use, copy, modify, merge, publish, distribute, and/or sublicense copies of the Assets within your game-related project (“Project”), subject to the following conditions:
+
+1. Attribution  
+   You must include the following credit in your Game/Project’s credits or about section:
+   
+       “Audio Pack ‘Tetrio Retro Pack’ by 8bJackie. Used with permission via You Have Fail @ TETR.IO PLUS.”
+
+2. Redistribution  
+   The Assets may be distributed as part of your Project (executable, installer, or package) but **may not** be redistributed in raw form or as a separate downloadable asset pack on its own.
+
+3. Commercial Use  
+   Unless otherwise agreed in writing by 8bJackie, the Assets may be used in both non-commercial and commercial Projects under the above conditions.
+
+4. Modification  
+   You may modify the Assets (trim, loop, convert format, apply effects) for use within your Project. The modified result may be distributed under the same terms.
+
+5. License Copy  
+   This license must be included alongside your Project when you make a public or commercial release.
+
+THE ASSETS ARE PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT.  
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, ARISING FROM, OUT OF OR IN CONNECTION WITH THE ASSETS OR THE USE OR OTHER DEALINGS IN THE ASSETS.
+
