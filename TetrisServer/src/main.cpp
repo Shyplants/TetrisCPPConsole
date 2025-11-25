@@ -7,7 +7,7 @@ int main()
 
 	while (true)
 	{
-		server.Update(-1, true);
+		server.Update(-1, false);
 	}
 
 	return 0;

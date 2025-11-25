@@ -69,6 +69,11 @@ void MultiPlayState::OnExit()
 {
 	if (m_Client)
 	{
+		SendUnregister();
+
+		// 100ms 대기: 패킷 전송 보장
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 		m_Client->Disconnect();
 	}
 }
@@ -476,6 +481,7 @@ void MultiPlayState::SendCurMinoState()
 	{
 		TETRIS_LOG("SendCurMinoState Failed");
 		__debugbreak();
+		return;
 	}
 
 	sMinoState state;
@@ -497,6 +503,7 @@ void MultiPlayState::SendHoldMinoState()
 	{
 		TETRIS_LOG("SendHoldMinoState Failed");
 		__debugbreak();
+		return;
 	}
 
 	sMinoState state;
@@ -515,6 +522,7 @@ void MultiPlayState::SendPreviewMinoState()
 	{
 		TETRIS_LOG("SendPreviewMinoState Failed");
 		__debugbreak();
+		return;
 	}
 
 	sPreviewMinoState state;
@@ -534,6 +542,7 @@ void MultiPlayState::SendBoardState()
 	{
 		TETRIS_LOG("SendBoardState Failed");
 		__debugbreak();
+		return;
 	}
 
 	sBoardState state = m_MyBoard->ToPacket();
@@ -548,8 +557,31 @@ void MultiPlayState::SendBoardState()
 
 void MultiPlayState::SendClientGameOver()
 {
+	if (!m_Client)
+	{
+		TETRIS_LOG("SendClientGameOver Failed");
+		__debugbreak();
+		return;
+	}
+
 	sp::net::message<GameMsg> msgOut;
 	msgOut.header.id = GameMsg::Game_PlayerDead;
+	msgOut << m_Client->GetPlayerID();
+
+	m_Client->Send(msgOut);
+}
+
+void MultiPlayState::SendUnregister()
+{
+	if (!m_Client || !m_Client->IsConnected())
+	{
+		TETRIS_LOG("SendUnregister Failed");
+		__debugbreak();
+		return;
+	}
+
+	sp::net::message<GameMsg> msgOut;
+	msgOut.header.id = GameMsg::Client_UnregisterWithServer;
 	msgOut << m_Client->GetPlayerID();
 
 	m_Client->Send(msgOut);
@@ -590,6 +622,15 @@ void MultiPlayState::HandlePackets()
 
 			switch (msgIn.header.id)
 			{
+				case GameMsg::Server_Ping:
+				{
+					sp::net::message<GameMsg> pong;
+					pong.header.id = GameMsg::Client_Pong;
+					m_Client->Send(pong);
+
+					break;
+				}
+
 				case GameMsg::Game_CurMinoState:
 				{
 					sMinoState state;
@@ -660,5 +701,7 @@ void MultiPlayState::HandlePackets()
 	else
 	{
 		TETRIS_LOG("Tetris Server Down");
+		m_StateMachine.RequestPopDepth(1);
+		return;
 	}
 }

@@ -140,6 +140,19 @@ namespace sp
 
 					nMessageCount++;
 				}
+
+				OnUpdate();
+			}
+
+		protected:
+			std::shared_ptr<connection<T>> GetConnectionByID(uint32_t id)
+			{
+				for (auto& conn : m_deqConnections)
+				{
+					if (conn->GetID() == id)
+						return conn;
+				}
+				return nullptr;
 			}
 
 		protected:
@@ -157,6 +170,13 @@ namespace sp
 			{
 
 			}
+
+			virtual void OnUpdate()
+			{
+
+			}
+
+		protected:
 
 		public:
 			virtual void OnClientValidated(std::shared_ptr<connection<T>> client)

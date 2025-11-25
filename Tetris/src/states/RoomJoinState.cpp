@@ -39,7 +39,16 @@ void RoomJoinState::OnEnter()
 
 void RoomJoinState::OnExit()
 {
-	// 나갈 때도 필요 시 클라이언트 close 가능
+	if (m_Client)
+	{
+		SendUnregister();
+
+		// 100ms 대기: 패킷 전송 보장
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		m_Client->Disconnect();
+	}
+
 	m_Console.ClearBuffer();
 }
 
@@ -95,6 +104,15 @@ void RoomJoinState::HandlePackets()
 
 			switch (msgIn.header.id)
 			{
+				case GameMsg::Server_Ping:
+				{
+					sp::net::message<GameMsg> pong;
+					pong.header.id = GameMsg::Client_Pong;
+					m_Client->Send(pong);
+
+					break;
+				}
+
 				case GameMsg::Client_Accepted:
 				{
 					sp::net::message<GameMsg> msgOut;
@@ -175,6 +193,23 @@ void RoomJoinState::HandlePackets()
 	else
 	{
 		TETRIS_LOG("Tetris Server Down");
+		m_StateMachine.RequestPopDepth(1);
+		return;
 	}
 }
 
+void RoomJoinState::SendUnregister()
+{
+	if (!m_Client || !m_Client->IsConnected())
+	{
+		TETRIS_LOG("SendUnregister Failed");
+		__debugbreak();
+		return;
+	}
+
+	sp::net::message<GameMsg> msgOut;
+	msgOut.header.id = GameMsg::Client_UnregisterWithServer;
+	msgOut << m_Client->GetPlayerID();
+
+	m_Client->Send(msgOut);
+}

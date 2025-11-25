@@ -29,6 +29,8 @@ private:
     void TryTransitionToMultiPlay();
     void HandlePackets();
 
+    void SendUnregister();
+
 private:
     Console& m_Console;
     Keyboard& m_Keyboard;

@@ -12,6 +12,11 @@ enum class GameMsg : uint32_t
     Client_RegisterWithServer,
     Client_UnregisterWithServer,
 
+    Client_Ping,
+    Server_Ping,
+    Client_Pong,
+    Server_Pong,
+
     // ------------------------------
     // Lobby / Room Join Flow
     // ------------------------------

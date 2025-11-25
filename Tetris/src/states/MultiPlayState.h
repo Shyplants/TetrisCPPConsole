@@ -65,6 +65,7 @@ private:
 	void SendPreviewMinoState();
 	void SendBoardState();
 	void SendClientGameOver();
+	void SendUnregister();
 
 	void OnServerGameOver();
 
