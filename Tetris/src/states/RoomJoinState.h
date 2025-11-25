@@ -2,6 +2,7 @@
 
 #include "IState.h"
 #include <memory>
+#include <chrono>
 #include "../common/PacketProtocol.h"
 
 class Console;
@@ -25,11 +26,12 @@ public:
     bool Exit() override;
 
 private:
-    void TryJoinRoom();
-    void TryTransitionToMultiPlay();
-    void HandlePackets();
+    void TryJoinRoom();                 // 서버에 RoomJoin 요청
+    void HandlePackets();               // 서버로부터 온 메시지 처리
+    void SendUnregister();              // 상태 종료 시 서버에 Unregister
 
-    void SendUnregister();
+    void ScheduleTransitionToMultiPlay();   // transition 지연 예약
+    void PerformTransitionToMultiPlay();    // 실제 상태 전이
 
 private:
     Console& m_Console;
@@ -39,16 +41,21 @@ private:
 
     std::unique_ptr<TetrisClient> m_Client;
 
-    bool m_bJoined{ false };
-    bool m_bFailed{ false };
-
-private:
-    std::unordered_map<uint32_t, sPlayerDescription> m_mapPlayers = {};
-    uint32_t nPlayerID{ 0 };
-    sPlayerDescription descPlayer;
-
-    bool m_bWatingForConnection{ true };
-
+    // 연결 과정 상태 표시
     std::wstring m_sCurrentState{};
-    uint64_t m_bagSeed{ 0 };
+
+    // 서버로부터 받은 플레이어 ID
+    uint32_t m_PlayerID{ 0 };
+
+    // 시드 (멀티플레이 시작 시 필요)
+    uint64_t m_BagSeed{ 0 };
+
+    // 상태 전이 예약 플래그
+    bool m_bTransitionQueued{ false };
+
+    // 서버 응답 타임아웃용
+    bool m_bServerResponded{ false };
+    std::chrono::steady_clock::time_point m_ConnectStartTime{};
+    static constexpr int SERVER_RESPONSE_TIMEOUT_MS = 5000; // 5초
 };
+
