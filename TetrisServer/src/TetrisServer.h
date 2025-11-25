@@ -52,17 +52,6 @@ private:
 
     bool IsClientValidated(uint32_t id) const;
 
-    std::shared_ptr<sp::net::connection<GameMsg>>
-        GetConnectionByID(uint32_t id)
-    {
-        for (auto& c : m_deqConnections)
-        {
-            if (c && c->GetID() == id)
-                return c;
-        }
-        return nullptr;
-    }
-
 private:
     // 게임 로직 관련
     uint64_t GenerateSeed();

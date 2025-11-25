@@ -156,103 +156,114 @@ void TetrisServer::HandleMessage(uint32_t clientID, sp::net::message<GameMsg>& m
 
     switch (msg.header.id)
     {
-    case GameMsg::Client_RegisterWithServer:
-    {
-        sPlayerDescription desc;
-        msg >> desc;
-        desc.nUniqueID = clientID;
-
-        m_mapConnectedPlayers[clientID] = desc;
-
-        sp::net::message<GameMsg> out;
-        out.header.id = GameMsg::Client_AssignID;
-        out << clientID;
-
-        MessageClient(client, out);
-        break;
-    }
-
-    case GameMsg::Client_Pong:
-    {
-        m_LastPongTime[clientID] = std::chrono::steady_clock::now();
-        std::cout << "[Pong] " << clientID << "\n";
-        break;
-    }
-
-    case GameMsg::Client_RequestRoomJoin:
-    {
+        case GameMsg::Client_RegisterWithServer:
         {
+            sPlayerDescription desc;
+
+            desc.nUniqueID = clientID;
+
+            m_mapConnectedPlayers[clientID] = desc;
+
             sp::net::message<GameMsg> out;
-            out.header.id = GameMsg::Server_RoomJoinAccepted;
+            out.header.id = GameMsg::Client_AssignID;
+            out << clientID;
 
             MessageClient(client, out);
+            break;
         }
 
-        if (m_mapConnectedPlayers.size() == 2)
+        case GameMsg::Client_UnregisterWithServer:
+        {
+            uint32_t leavingID{ 0 };
+            msg >> leavingID;
+
+            std::cout << "[Graceful Notice] Client wants to disconnect: " << leavingID << "\n";
+
+            client->Disconnect();
+            break;
+        }
+
+        case GameMsg::Client_Pong:
+        {
+            m_LastPongTime[clientID] = std::chrono::steady_clock::now();
+            std::cout << "[Pong] " << clientID << "\n";
+            break;
+        }
+
+        case GameMsg::Client_RequestRoomJoin:
         {
             {
                 sp::net::message<GameMsg> out;
-                out.header.id = GameMsg::Game_SendBagSeed;
-                out << GenerateSeed();
+                out.header.id = GameMsg::Server_RoomJoinAccepted;
 
-                MessageAllClients(out);
+                MessageClient(client, out);
             }
 
+            if (m_mapConnectedPlayers.size() == 2)
             {
-                sp::net::message<GameMsg> out;
-                out.header.id = GameMsg::Server_AllPlayersReady;
-
-                MessageAllClients(out);
-            }
-        }
-
-        break;
-    }
-
-    case GameMsg::Game_PlayerDead:
-    {
-        uint32_t loserID;
-        msg >> loserID;
-
-        if (m_mapConnectedPlayers.size() == 2)
-        {
-            uint32_t winnerID = 0;
-            for (auto& kv : m_mapConnectedPlayers)
-            {
-                if (kv.first != loserID)
                 {
-                    winnerID = kv.first;
-                    break;
+                    sp::net::message<GameMsg> out;
+                    out.header.id = GameMsg::Game_SendBagSeed;
+                    out << GenerateSeed();
+
+                    MessageAllClients(out);
+                }
+
+                {
+                    sp::net::message<GameMsg> out;
+                    out.header.id = GameMsg::Server_AllPlayersReady;
+
+                    MessageAllClients(out);
                 }
             }
 
-            sp::net::message<GameMsg> out;
-            out.header.id = GameMsg::Server_GameOver;
-
-            sGameOverInfo info{ winnerID, loserID };
-            out << info;
-
-            MessageAllClients(out);
+            break;
         }
-        break;
-    }
 
-    case GameMsg::Game_CurMinoState:
-    case GameMsg::Game_PreviewMinoState:
-    case GameMsg::Game_HoldMinoState:
-    case GameMsg::Game_BoardState:
-    case GameMsg::Game_UpdatePlayer:
-    {
-        MessageAllClients(msg, client);
+        case GameMsg::Game_PlayerDead:
+        {
+            uint32_t loserID;
+            msg >> loserID;
 
-        break;
-    }
+            if (m_mapConnectedPlayers.size() == 2)
+            {
+                uint32_t winnerID = 0;
+                for (auto& kv : m_mapConnectedPlayers)
+                {
+                    if (kv.first != loserID)
+                    {
+                        winnerID = kv.first;
+                        break;
+                    }
+                }
+
+                sp::net::message<GameMsg> out;
+                out.header.id = GameMsg::Server_GameOver;
+
+                sGameOverInfo info{ winnerID, loserID };
+                out << info;
+
+                MessageAllClients(out);
+            }
+            break;
+        }
+
+        case GameMsg::Game_CurMinoState:
+        case GameMsg::Game_PreviewMinoState:
+        case GameMsg::Game_HoldMinoState:
+        case GameMsg::Game_BoardState:
+        case GameMsg::Game_UpdatePlayer:
+        {
+            MessageAllClients(msg, client);
+
+            break;
+        }
 
 
-    default:
-        std::cout << "[Unvalid GameMsg] " << (uint32_t)msg.header.id << "\n";
-        __debugbreak();
-        break;
+        default:
+            std::cout << "[Unvalid GameMsg] " << (uint32_t)msg.header.id << "\n";
+            __debugbreak();
+            break;
     }
 }
 

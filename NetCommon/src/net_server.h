@@ -61,12 +61,12 @@ namespace sp
 						{
 							std::cout << "[SERVER] New Connection: " << socket.remote_endpoint() << "\n";
 
-							std::shared_ptr<connection<T>> newconn =
+							std::shared_ptr<connection<T>> newClient =
 								std::make_shared<connection<T>>(connection<T>::owner::server, m_asioContext, std::move(socket), m_qMessagesIn);
 
-							if (OnClientConnect(newconn))
+							if (OnClientConnect(newClient))
 							{
-								m_deqConnections.push_back(std::move(newconn));
+								m_deqConnections.push_back(std::move(newClient));
 
 								m_deqConnections.back()->ConnectToClient(this, nIDCounter++);
 
@@ -92,20 +92,10 @@ namespace sp
 				{
 					client->Send(msg);
 				}
-				else
-				{
-					OnClientDisconnect(client);
-
-					client.reset();
-
-					m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
-				}
 			}
 
 			void MessageAllClients(const message<T>& msg, std::shared_ptr<connection<T>> pIgnoreClient = nullptr)
 			{
-				bool bInvalidClientExists = false;
-
 				for (auto& client : m_deqConnections)
 				{
 					if (client && client->IsConnected())
@@ -113,17 +103,7 @@ namespace sp
 						if (client != pIgnoreClient)
 							client->Send(msg);
 					}
-					else
-					{
-						OnClientDisconnect(client);
-						client.reset();
-
-						bInvalidClientExists = true;
-					}
 				}
-
-				if (bInvalidClientExists)
-					m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
 			}
 
 			void Update(size_t nMaxMessages = -1, bool bWait = false)
@@ -139,6 +119,23 @@ namespace sp
 					OnMessage(msg.remote, msg.msg);
 
 					nMessageCount++;
+				}
+
+				bool bInvalidClientExists = false;
+				for (auto& client : m_deqConnections)
+				{
+					if (client && !client->IsConnected())
+					{
+						OnClientDisconnect(client);
+						client.reset();
+
+						bInvalidClientExists = true;
+					}
+				}
+
+				if (bInvalidClientExists)
+				{
+					m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
 				}
 
 				OnUpdate();

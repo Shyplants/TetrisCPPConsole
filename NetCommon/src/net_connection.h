@@ -83,13 +83,29 @@ namespace sp
 
 			void Disconnect()
 			{
+				// 중복 Disconnect 방지
+				if (!m_bAlive)
+					return;
+
+				m_bAlive = false;
+
 				if (IsConnected())
-					asio::post(m_asioContext, [this]() {m_socket.close(); });
+					asio::post(m_asioContext, [this]() 
+						{
+							std::error_code ec;
+							m_socket.cancel(ec);
+
+							// 읽기/쓰기 모두 종료
+							m_socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
+							
+							m_socket.close();
+
+						});
 			}
 
 			bool IsConnected() const
 			{
-				return m_socket.is_open();
+				return m_bAlive && m_socket.is_open();
 			}
 
 			void StartListening()
@@ -103,6 +119,9 @@ namespace sp
 				asio::post(m_asioContext,
 					[this, msg]()
 					{
+						if (!m_bAlive)
+							return;
+
 						bool bWritingMessage = !m_qMessagesOut.empty();
 						m_qMessagesOut.push_back(msg);
 						if (!bWritingMessage)
@@ -115,9 +134,15 @@ namespace sp
 		private:
 			void WriteHeader()
 			{
+				if (!m_bAlive)
+					return;
+
 				asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
 					[this](std::error_code ec, std::size_t length)
 					{
+						if (!m_bAlive)
+							return;
+
 						if (!ec)
 						{
 							if (m_qMessagesOut.front().body.size() > 0)
@@ -137,16 +162,22 @@ namespace sp
 						else
 						{
 							std::cout << "[" << id << "] Write Header Fail.\n";
-							m_socket.close();
+							Disconnect();
 						}
 					});
 			}
 
 			void WriteBody()
 			{
+				if (!m_bAlive)
+					return;
+
 				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.front().body.size()),
 					[this](std::error_code ec, std::size_t length)
 					{
+						if (!m_bAlive)
+							return;
+
 						if (!ec)
 						{
 							m_qMessagesOut.pop_front();
@@ -159,7 +190,7 @@ namespace sp
 						else
 						{
 							std::cout << "[" << id << "] Write Body Fail.\n";
-							m_socket.close();
+							Disconnect();
 						}
 					}
 				);
@@ -167,9 +198,15 @@ namespace sp
 
 			void ReadHeader()
 			{
+				if (!m_bAlive)
+					return;
+
 				asio::async_read(m_socket, asio::buffer(&m_msgTemporaryIn.header, sizeof(message_header<T>)),
 					[this](std::error_code ec, std::size_t length)
 					{
+						if (!m_bAlive)
+							return;
+
 						if (!ec)
 						{
 							if (m_msgTemporaryIn.header.size > 0)
@@ -185,16 +222,22 @@ namespace sp
 						else
 						{
 							std::cout << "[" << id << "] Read Header Fail.\n";
-							m_socket.close();
+							Disconnect();
 						}
 					});
 			}
 
 			void ReadBody()
 			{
+				if (!m_bAlive)
+					return;
+
 				asio::async_read(m_socket, asio::buffer(m_msgTemporaryIn.body.data(), m_msgTemporaryIn.body.size()),
 					[this](std::error_code ec, std::size_t length)
 					{
+						if (!m_bAlive)
+							return;
+
 						if (!ec)
 						{
 							AddToInCommingMessageQueue();
@@ -202,13 +245,16 @@ namespace sp
 						else
 						{
 							std::cout << "[" << id << "] Read Body Fail.\n";
-							m_socket.close();
+							Disconnect();
 						}
 					});
 			}
 
 			void AddToInCommingMessageQueue()
 			{
+				if (!m_bAlive)
+					return;
+
 				if (m_nOwnerType == owner::server)
 				{
 					m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn });
@@ -239,12 +285,15 @@ namespace sp
 					{
 						if (!ec)
 						{
+							if (!m_bAlive)
+								return;
+
 							if (m_nOwnerType == owner::client)
 								ReadHeader();
 						}
 						else
 						{
-							m_socket.close();
+							Disconnect();
 						}
 					});
 			}
@@ -268,20 +317,19 @@ namespace sp
 								else
 								{
 									std::cout << "Client Disconnected (Fail Validation)" << std::endl;
-									m_socket.close();
+									Disconnect();
 								}
 							}
 							else
 							{
 								m_nHandshakeOut = scramble(m_nHandshakeIn);
-
 								WriteValidation();
 							}
 						}
 						else
 						{
 							std::cout << "Client Disconnect (ReadValidation)" << std::endl;
-							m_socket.close();
+							Disconnect();
 						}
 					});
 			}
@@ -302,6 +350,7 @@ namespace sp
 			uint64_t m_nHandshakeIn = 0;
 			uint64_t m_nHandshakeCheck = 0;
 
+			bool m_bAlive = true;
 		};
 	}
 }
