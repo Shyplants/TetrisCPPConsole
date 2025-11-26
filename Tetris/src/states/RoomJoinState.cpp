@@ -100,13 +100,16 @@ void RoomJoinState::PerformTransitionToMultiPlay()
 {
     m_bTransitionQueued = false;
 
-    auto nextState = std::make_unique<MultiPlayState>(
-        m_Console, m_Keyboard, m_SoundManager, m_StateMachine, m_BagSeed);
-
-    // Client 소유권 넘기기
-    nextState->SetClient(std::move(m_Client));
-
-    m_StateMachine.PushState(std::move(nextState));
+    m_StateMachine.PushState(
+        std::make_unique<MultiPlayState>(
+            m_Console,
+            m_Keyboard,
+            m_SoundManager,
+            m_StateMachine,
+            std::move(m_Client),
+            m_BagSeed
+        )
+    );
 }
 
 void RoomJoinState::HandlePackets()

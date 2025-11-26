@@ -12,7 +12,7 @@ class BagRandom
 public:
 	BagRandom() = default;
 	BagRandom(uint64_t seed);
-	~BagRandom() = default;
+	~BagRandom();
 
 	// 다음 타입 하나 꺼내기 (없으면 자동 리필)
 	Tetris::TetrominoType Next();

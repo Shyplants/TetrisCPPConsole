@@ -2,7 +2,6 @@
 #include "Console.h"
 #include "Board.h"
 #include "BagRandom.h"
-#include "Score.h"
 #include "utils/Timer.h"
 #include "Tetromino.h"
 #include <cassert>
@@ -14,6 +13,8 @@ ConsoleRenderer::ConsoleRenderer(Console& console, int boardLeft, int boardTop)
 {
 
 }
+
+ConsoleRenderer::~ConsoleRenderer() = default;
 
 void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, const Tetromino* ghostMino)
 {
@@ -105,7 +106,7 @@ void ConsoleRenderer::DrawHoldPanel(const Tetris::TetrominoType holdMinoType)
 	current_y += 2;
 }
 
-void ConsoleRenderer::DrawPreviewPanel(std::array<Tetris::TetrominoType, Tetris::MINO_PREVIEW_COUNT>& previewTypes)
+void ConsoleRenderer::DrawPreviewPanel(const std::array<Tetris::TetrominoType, Tetris::MINO_PREVIEW_COUNT>& previewTypes)
 {
 	const int panel_x = m_BoardLeft + (BOARD_WIDTH + 1) * 2 + 2;
 	const int panel_y = m_BoardTop + BOARD_HIDDEN_HEIGHT;

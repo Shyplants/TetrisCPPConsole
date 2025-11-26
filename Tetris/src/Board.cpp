@@ -14,6 +14,8 @@ Board::Board(int width, int height) noexcept
 
 }
 
+Board::~Board() = default;
+
 const int Board::Get(int x, int y) const
 {
 	if (OOB(x, y))

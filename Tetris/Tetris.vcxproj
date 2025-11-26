@@ -144,6 +144,9 @@
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\inputs\Keyboard.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\multiplay\MultiPlayLogic.cpp" />
+    <ClCompile Include="src\multiplay\MultiPlayNetwork.cpp" />
+    <ClCompile Include="src\multiplay\MultiPlayRenderer.cpp" />
     <ClCompile Include="src\network\TetrisClient.cpp" />
     <ClCompile Include="src\Score.cpp" />
     <ClCompile Include="src\states\GameOverState.cpp" />
@@ -174,6 +177,9 @@
     <ClInclude Include="src\inputs\Button.h" />
     <ClInclude Include="src\inputs\Keyboard.h" />
     <ClInclude Include="src\inputs\Keys.h" />
+    <ClInclude Include="src\multiplay\MultiPlayLogic.h" />
+    <ClInclude Include="src\multiplay\MultiPlayNetwork.h" />
+    <ClInclude Include="src\multiplay\MultiPlayRenderer.h" />
     <ClInclude Include="src\network\TetrisClient.h" />
     <ClInclude Include="src\Score.h" />
     <ClInclude Include="src\Selector.h" />

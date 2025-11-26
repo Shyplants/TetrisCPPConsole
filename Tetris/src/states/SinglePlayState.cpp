@@ -207,6 +207,8 @@ bool SinglePlayState::TrySpawnMino()
 	m_CurMino->SetPos(BOARD_WIDTH / 2, 1);
 
 	m_GravityTimer->Restart();
+
+	return true;
 }
 
 bool SinglePlayState::TryMove(int dx, int dy)

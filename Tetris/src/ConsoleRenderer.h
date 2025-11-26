@@ -3,11 +3,11 @@
 #include <array>
 #include "utils/Types.h"
 #include "./common/TetrisTypes.h"
+#include "Score.h"
 
 class Console;
 class Board;
 class BagRandom;
-class Score;
 class Timer;
 class Tetromino;
 
@@ -16,10 +16,11 @@ class ConsoleRenderer
 {
 public:
 	ConsoleRenderer(Console& console, int boardLeft, int boardTop);
+	~ConsoleRenderer();
 
 	void DrawBoard(const Board& board, const Tetromino* curMino, const Tetromino* ghostMino);
 	void DrawHoldPanel(const Tetris::TetrominoType holdMinoType);
-	void DrawPreviewPanel(std::array<Tetris::TetrominoType, Tetris::MINO_PREVIEW_COUNT>& previewTypes);
+	void DrawPreviewPanel(const std::array<Tetris::TetrominoType, Tetris::MINO_PREVIEW_COUNT>& previewTypes);
 	void DrawInfoPanel(const Score& score, const Timer& playTimer, int totalPieces, int& lastCombo, bool& showCombo, Timer& comboTimer);
 
 private:

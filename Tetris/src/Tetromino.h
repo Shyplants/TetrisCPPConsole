@@ -9,6 +9,7 @@ class Tetromino
 {
 public:
 	explicit Tetromino(Tetris::TetrominoType type = Tetris::TetrominoType::None) noexcept;
+	~Tetromino();
 
 	const Tetris::TetrominoType GetType() const { return m_Type; }
 	const Tetris::Rotation GetRotation() const { return m_Rotation; }

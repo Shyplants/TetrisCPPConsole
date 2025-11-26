@@ -13,7 +13,7 @@ class Board
 {
 public:
 	explicit Board(int width = BOARD_WIDTH, int height = BOARD_HEIGHT) noexcept;
-	~Board() = default;
+	~Board();
 
 	const int GetWidth() const { return m_Width; }
 	const int GetHeight() const { return m_Height; }

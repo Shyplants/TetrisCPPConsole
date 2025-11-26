@@ -7,6 +7,8 @@ Tetromino::Tetromino(Tetris::TetrominoType type) noexcept
 {
 }
 
+Tetromino::~Tetromino() = default;
+
 void Tetromino::SetType(Tetris::TetrominoType type)
 {
 	m_Type = type;

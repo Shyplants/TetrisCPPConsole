@@ -5,6 +5,8 @@ BagRandom::BagRandom(uint64_t seed)
 	Seed(seed);
 }
 
+BagRandom::~BagRandom() = default;
+
 Tetris::TetrominoType BagRandom::Next()
 {
 	if (m_Queue.empty())

@@ -6,6 +6,9 @@ C:\Users\wlsdn\source\repos\Tetris\Tetris\src\ConsoleRenderer.cpp;C:\Users\wlsdn
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\Game.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\Game.obj
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\inputs\Keyboard.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\Keyboard.obj
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\main.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\main.obj
+C:\Users\wlsdn\source\repos\Tetris\Tetris\src\multiplay\MultiPlayLogic.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\MultiPlayLogic.obj
+C:\Users\wlsdn\source\repos\Tetris\Tetris\src\multiplay\MultiPlayNetwork.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\MultiPlayNetwork.obj
+C:\Users\wlsdn\source\repos\Tetris\Tetris\src\multiplay\MultiPlayRenderer.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\MultiPlayRenderer.obj
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\network\TetrisClient.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\TetrisClient.obj
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\Score.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\Score.obj
 C:\Users\wlsdn\source\repos\Tetris\Tetris\src\states\GameOverState.cpp;C:\Users\wlsdn\source\repos\Tetris\Tetris\x64\Debug\GameOverState.obj
