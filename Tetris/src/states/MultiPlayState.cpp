@@ -154,7 +154,7 @@ void MultiPlayState::ProcessInputs()
 
 	if (m_Keyboard.IsKeyJustPressed(KEY_UP))
 	{
-		if (TryRotateCW())
+		if (TryRotate(true))
 		{
 
 		}
@@ -162,7 +162,7 @@ void MultiPlayState::ProcessInputs()
 
 	if (m_Keyboard.IsKeyJustPressed(KEY_Z))
 	{
-		if (TryRotateCCW())
+		if (TryRotate(false))
 		{
 
 		}
@@ -272,7 +272,7 @@ bool MultiPlayState::TryMove(int dx, int dy)
 	return true;
 }
 
-bool MultiPlayState::TryRotateCW()
+bool MultiPlayState::TryRotate(bool cw)
 {
 	if (!m_MyCurMino)
 	{
@@ -280,38 +280,99 @@ bool MultiPlayState::TryRotateCW()
 		return false;
 	}
 
-	const Tetris::Rotation prevRot = m_MyCurMino->GetRotation();
-	m_MyCurMino->RotateCW();
+	bool ret = false;
+	Vec2 should_offset{};
+	auto curRotation = m_MyCurMino->GetRotation();
+	auto nextRotation = cw ? Tetris::NextCW(curRotation) : Tetris::NextCCW(curRotation);
+	auto rotateBlocks = m_MyCurMino->GetBlocks(nextRotation);
+	for (auto& block : rotateBlocks)
+		block = block + m_MyCurMino->GetPos();
 
-	if (m_MyBoard->IsCollide(*m_MyCurMino, 0, 0))
+	switch (m_MyCurMino->GetType())
 	{
-		m_MyCurMino->SetRotation(prevRot);
+	case Tetris::TetrominoType::J:
+	case Tetris::TetrominoType::L:
+	case Tetris::TetrominoType::S:
+	case Tetris::TetrominoType::T:
+	case Tetris::TetrominoType::Z:
+	{
+		auto offsetData = Tetromino::Get_JLSTZ_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::JLSTZ_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_MyBoard->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+	case Tetris::TetrominoType::I:
+	{
+		auto offsetData = Tetromino::Get_I_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::I_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_MyBoard->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+
+	case Tetris::TetrominoType::O:
+	{
+		auto offsetData = Tetromino::Get_O_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::O_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_MyBoard->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+	default:
 		return false;
 	}
 
-	SendCurMinoState();
-	return true;
-}
-
-bool MultiPlayState::TryRotateCCW()
-{
-	if (!m_MyCurMino)
+	if (ret)
 	{
-		TETRIS_LOG("m_CurMino is not valid!");
-		return false;
+		m_MyCurMino->SetPos(m_MyCurMino->GetX() + should_offset.x, m_MyCurMino->GetY() + should_offset.y);
+		m_MyCurMino->Rotate(cw);
+		SendCurMinoState();
 	}
 
-	const Tetris::Rotation prevRot = m_MyCurMino->GetRotation();
-	m_MyCurMino->RotateCCW();
-
-	if (m_MyBoard->IsCollide(*m_MyCurMino, 0, 0))
-	{
-		m_MyCurMino->SetRotation(prevRot);
-		return false;
-	}
-
-	SendCurMinoState();
-	return true;
+	return ret;
 }
 
 bool MultiPlayState::TryHold()

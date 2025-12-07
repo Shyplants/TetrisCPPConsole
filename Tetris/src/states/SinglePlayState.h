@@ -37,8 +37,7 @@ private:
 	// 게임 로직
 	bool TrySpawnMino();
 	bool TryMove(int dx, int dy);
-	bool TryRotateCW();
-	bool TryRotateCCW();
+	bool TryRotate(bool cw);
 	bool TryHold();
 	void HardDrop();
 	void LockAndProceed();

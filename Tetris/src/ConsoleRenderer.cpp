@@ -50,7 +50,7 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 	{
 		const int color = ghostMino->GetColor();
 		auto yOffset = m_BoardTop + height - 1;
-		for (auto b : ghostMino->GetBlocks())
+		for (auto& b : ghostMino->GetBlocks())
 		{
 			int gx = ghostMino->GetX() + b.x;
 			int gy = ghostMino->GetY() + b.y;
@@ -66,7 +66,7 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 	{
 		int color = curMino->GetColor();
 		auto yOffset = m_BoardTop + height - 1;
-		for (auto b : curMino->GetBlocks())
+		for (auto& b : curMino->GetBlocks())
 		{
 			int gx = curMino->GetX() + b.x;
 			int gy = curMino->GetY() + b.y;
