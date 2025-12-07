@@ -84,7 +84,7 @@ void SinglePlayState::Update()
 	// 중력 낙하
 	if (m_GravityTimer->ElapsedMS() >= GravityIntervalMS())
 	{
-		if (!TryMove(0, +1))
+		if (!TryMove(0, -1))
 		{
 			LockAndProceed();
 		}
@@ -141,7 +141,7 @@ void SinglePlayState::ProcessInputs()
 	else if (m_Keyboard.IsKeyJustPressed(KEY_DOWN) ||
 		(m_Keyboard.IsKeyHeld(KEY_DOWN) && m_SoftDropTimer->ElapsedMS() >= GameConfig::SoftDropIntervalMS))
 	{
-		if (TryMove(0, +1))
+		if (TryMove(0, -1))
 		{
 			m_SoundManager.PlaySE_Force("move");
 			m_Score->AddSoftDrop(1);
@@ -192,7 +192,7 @@ bool SinglePlayState::TrySpawnMino()
 {
 	// 다음 미노 스폰시 충돌 발생하는지 검사
 	Tetromino tempMino(m_Bag->Peek(0));
-	tempMino.SetPos(BOARD_WIDTH / 2, 1);
+	tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT-2);
 
 	if (m_Board->IsCollide(tempMino, 0, 0))
 	{
@@ -204,7 +204,7 @@ bool SinglePlayState::TrySpawnMino()
 
 	// 중앙 상단 스폰
 	m_CurMino->SetRotation(Tetris::Rotation::R0);
-	m_CurMino->SetPos(BOARD_WIDTH / 2, 1);
+	m_CurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 	m_GravityTimer->Restart();
 }
@@ -284,7 +284,7 @@ bool SinglePlayState::TryHold()
 	{
 		// 홀드 미노와 스왑시 충돌 발생하는지 검사
 		Tetromino tempMino(m_holdMinoType);
-		tempMino.SetPos(BOARD_WIDTH / 2, 1);
+		tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		if (m_Board->IsCollide(tempMino, 0, 0))
 		{
@@ -296,7 +296,7 @@ bool SinglePlayState::TryHold()
 		// 현재 미노를 홀드 타입으로 교체 및 초기화
 		m_CurMino->SetType(m_holdMinoType);
 		m_CurMino->SetRotation(Tetris::Rotation::R0);
-		m_CurMino->SetPos(BOARD_WIDTH / 2, 1);
+		m_CurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		m_holdMinoType = oldMinoType;
 	}
@@ -315,7 +315,7 @@ void SinglePlayState::HardDrop()
 	}
 
 	int dropped = 0;
-	while (TryMove(0, +1))
+	while (TryMove(0, -1))
 		++dropped;
 
 	if (dropped > 0)
@@ -389,8 +389,8 @@ void SinglePlayState::UpdateGhostMino()
 	m_GhostMino = std::make_unique<Tetromino>(*m_CurMino);
 
 	// 가능한 아래로 이동
-	while (!m_Board->IsCollide(*m_GhostMino, 0, +1))
-		m_GhostMino->SetPos(m_GhostMino->GetX(), m_GhostMino->GetY() + 1);
+	while (!m_Board->IsCollide(*m_GhostMino, 0, -1))
+		m_GhostMino->SetPos(m_GhostMino->GetX(), m_GhostMino->GetY() - 1);
 }
 
 void SinglePlayState::OnComboAchieved(int comboCount)

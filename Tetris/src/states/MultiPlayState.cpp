@@ -107,7 +107,7 @@ void MultiPlayState::Update()
 	// 중력 낙하
 	if (m_GravityTimer->ElapsedMS() >= GravityIntervalMS())
 	{
-		if (!TryMove(0, +1))
+		if (!TryMove(0, -1))
 		{
 			LockAndProceed();
 		}
@@ -171,7 +171,7 @@ void MultiPlayState::ProcessInputs()
 	else if (m_Keyboard.IsKeyJustPressed(KEY_DOWN) ||
 		(m_Keyboard.IsKeyHeld(KEY_DOWN) && m_SoftDropTimer->ElapsedMS() >= GameConfig::SoftDropIntervalMS))
 	{
-		if (TryMove(0, +1))
+		if (TryMove(0, -1))
 		{
 			m_SoundManager.PlaySE_Force("move");
 			m_Score->AddSoftDrop(1);
@@ -236,7 +236,7 @@ bool MultiPlayState::TrySpawnMino()
 {
 	// 다음 미노 스폰시 충돌 발생하는지 검사
 	Tetromino tempMino(m_MyBag->Peek(0));
-	tempMino.SetPos(BOARD_WIDTH / 2, 1);
+	tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 	if (m_MyBoard->IsCollide(tempMino, 0, 0))
 	{
@@ -248,7 +248,7 @@ bool MultiPlayState::TrySpawnMino()
 
 	// 중앙 상단 스폰
 	m_MyCurMino->SetRotation(Tetris::Rotation::R0);
-	m_MyCurMino->SetPos(BOARD_WIDTH / 2, 1);
+	m_MyCurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 	m_GravityTimer->Restart();
 
@@ -333,7 +333,7 @@ bool MultiPlayState::TryHold()
 	{
 		// 홀드 미노와 스왑시 충돌 발생하는지 검사
 		Tetromino tempMino(m_MyHoldMinoType);
-		tempMino.SetPos(BOARD_WIDTH / 2, 1);
+		tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		if (m_MyBoard->IsCollide(tempMino, 0, 0))
 		{
@@ -345,7 +345,7 @@ bool MultiPlayState::TryHold()
 		// 현재 미노를 홀드 타입으로 교체 및 초기화
 		m_MyCurMino->SetType(m_MyHoldMinoType);
 		m_MyCurMino->SetRotation(Tetris::Rotation::R0);
-		m_MyCurMino->SetPos(BOARD_WIDTH / 2, 1);
+		m_MyCurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		m_MyHoldMinoType = oldMinoType;
 	}
@@ -364,7 +364,7 @@ void MultiPlayState::HardDrop()
 	}
 
 	int dropped = 0;
-	while (TryMove(0, 1))
+	while (TryMove(0, -1))
 		++dropped;
 
 	if (dropped > 0)
@@ -434,8 +434,8 @@ void MultiPlayState::UpdateMyGhostMino()
 	m_MyGhostMino = std::make_unique<Tetromino>(*m_MyCurMino);
 
 	// 가능한 아래로 이동
-	while (!m_MyBoard->IsCollide(*m_MyGhostMino, 0, +1))
-		m_MyGhostMino->SetPos(m_MyGhostMino->GetX(), m_MyGhostMino->GetY() + 1);
+	while (!m_MyBoard->IsCollide(*m_MyGhostMino, 0, -1))
+		m_MyGhostMino->SetPos(m_MyGhostMino->GetX(), m_MyGhostMino->GetY() - 1);
 }
 
 void MultiPlayState::UpdateEnemyGhostMino()
@@ -447,8 +447,8 @@ void MultiPlayState::UpdateEnemyGhostMino()
 	m_EnemyGhostMino = std::make_unique<Tetromino>(*m_EnemyCurMino);
 
 	// 가능한 아래로 이동
-	while (!m_EnemyBoard->IsCollide(*m_EnemyGhostMino, 0, +1))
-		m_EnemyGhostMino->SetPos(m_EnemyGhostMino->GetX(), m_EnemyGhostMino->GetY() + 1);
+	while (!m_EnemyBoard->IsCollide(*m_EnemyGhostMino, 0, -1))
+		m_EnemyGhostMino->SetPos(m_EnemyGhostMino->GetX(), m_EnemyGhostMino->GetY() - 1);
 }
 
 void MultiPlayState::UpdateMyPreviewMinos()
