@@ -22,8 +22,7 @@ public:
 
     // --- 게임 조작 ---
     bool TryMove(Tetris::PlayerSide side, int dx, int dy);
-    bool TryRotateCW(Tetris::PlayerSide side);
-    bool TryRotateCCW(Tetris::PlayerSide side);
+    bool TryRotate(Tetris::PlayerSide side, bool cw);
     bool TryHold(Tetris::PlayerSide side);
     void HardDrop(Tetris::PlayerSide side);
     bool TrySoftDrop(Tetris::PlayerSide side);

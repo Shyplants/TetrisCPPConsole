@@ -48,7 +48,6 @@ void MultiPlayLogic::Init()
     UpdatePreview(PlayerSide::Remote);
 
     m_GravityTimer->Start();
-    m_SoftDropTimer->Start();
     m_PlayTimer->Start();
     m_ComboTimer->Start();
 }
@@ -60,7 +59,7 @@ void MultiPlayLogic::Update()
 
     if(m_GravityTimer->ElapsedMS() >= GravityIntervalMS())
     {
-        if (!TryMove(PlayerSide::Local, 0, +1))
+        if (!TryMove(PlayerSide::Local, 0, -1))
         {
             LockAndProceed(PlayerSide::Local);
         }
@@ -100,7 +99,7 @@ bool MultiPlayLogic::TryMove(PlayerSide side, int dx, int dy)
 }
 
 // [Local Only]
-bool MultiPlayLogic::TryRotateCW(PlayerSide side)
+bool MultiPlayLogic::TryRotate(PlayerSide side, bool cw)
 {
     if (side != PlayerSide::Local)
     {
@@ -110,51 +109,108 @@ bool MultiPlayLogic::TryRotateCW(PlayerSide side)
     }
 
     int i = Idx(side);
-    auto* cur = m_CurMino[i].get();
+    auto* curMino = m_CurMino[i].get();
+    auto* board = m_Board[i].get();
 
-    if (!cur)
-        return false;
-
-    auto prev = cur->GetRotation();
-    cur->RotateCW();
-
-    if (m_Board[i]->IsCollide(*cur, 0, 0))
+    if (!curMino)
     {
-        cur->SetRotation(prev);
-        return false;
-    }
-    m_bSyncCurMino = true;
-
-    return true;
-}
-
-// [Local Only]
-bool MultiPlayLogic::TryRotateCCW(PlayerSide side)
-{
-    if (side != PlayerSide::Local)
-    {
-        TETRIS_ERROR("side must be Local Only");
-        __debugbreak();
+        TETRIS_LOG("m_CurMino is not valid!");
         return false;
     }
 
-    int i = Idx(side);
-    auto* cur = m_CurMino[i].get();
+    bool ret = false;
+    Vec2 should_offset{};
+    auto curRotation = curMino->GetRotation();
+    auto nextRotation = cw ? Tetris::NextCW(curRotation) : Tetris::NextCCW(curRotation);
+    auto rotateBlocks = curMino->GetBlocks(nextRotation);
+    for (auto& block : rotateBlocks)
+        block = block + curMino->GetPos();
 
-    if (!cur)
-        return false;
-
-    auto prev = cur->GetRotation();
-    cur->RotateCCW();
-
-    if (m_Board[i]->IsCollide(*cur, 0, 0))
+    switch (curMino->GetType())
     {
-        cur->SetRotation(prev);
+    case Tetris::TetrominoType::J:
+    case Tetris::TetrominoType::L:
+    case Tetris::TetrominoType::S:
+    case Tetris::TetrominoType::T:
+    case Tetris::TetrominoType::Z:
+    {
+        auto offsetData = Tetromino::Get_JLSTZ_OffsetData();
+
+        // test
+        for (int i = 0; i < Tetris::JLSTZ_OFFSET_COUNT; ++i)
+        {
+            auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+            auto testBlocks = rotateBlocks;
+            for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+                testBlocks[j] = rotateBlocks[j] + offset;
+
+            if (!board->IsCollide(testBlocks))
+            {
+                ret = true;
+                should_offset = offset;
+                break;
+            }
+        }
+
+        break;
+    }
+    case Tetris::TetrominoType::I:
+    {
+        auto offsetData = Tetromino::Get_I_OffsetData();
+
+        // test
+        for (int i = 0; i < Tetris::I_OFFSET_COUNT; ++i)
+        {
+            auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+            auto testBlocks = rotateBlocks;
+            for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+                testBlocks[j] = rotateBlocks[j] + offset;
+
+            if (!board->IsCollide(testBlocks))
+            {
+                ret = true;
+                should_offset = offset;
+                break;
+            }
+        }
+
+        break;
+    }
+
+    case Tetris::TetrominoType::O:
+    {
+        auto offsetData = Tetromino::Get_O_OffsetData();
+
+        // test
+        for (int i = 0; i < Tetris::O_OFFSET_COUNT; ++i)
+        {
+            auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+            auto testBlocks = rotateBlocks;
+            for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+                testBlocks[j] = rotateBlocks[j] + offset;
+
+            if (!board->IsCollide(testBlocks))
+            {
+                ret = true;
+                should_offset = offset;
+                break;
+            }
+        }
+
+        break;
+    }
+    default:
         return false;
     }
-    m_bSyncCurMino = true;
 
-    return true;
+    if (ret)
+    {
+        curMino->SetPos(curMino->GetX() + should_offset.x, curMino->GetY() + should_offset.y);
+        curMino->Rotate(cw);
+        m_bSyncCurMino = true;
+    }
+
+    return ret;
 }
 
 // [Local Only]
@@ -183,7 +239,7 @@ bool MultiPlayLogic::TryHold(PlayerSide side)
     else
     {
         Tetromino tmp(m_HoldType[i]);
-        tmp.SetPos(BOARD_WIDTH / 2, 1);
+        tmp.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
         if (m_Board[i]->IsCollide(tmp, 0, 0))
             return false;
@@ -192,7 +248,7 @@ bool MultiPlayLogic::TryHold(PlayerSide side)
 
         cur->SetType(m_HoldType[i]);
         cur->SetRotation(Tetris::Rotation::R0);
-        cur->SetPos(BOARD_WIDTH / 2, 1);
+        cur->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
         m_HoldType[i] = oldType;
     }
@@ -216,7 +272,7 @@ void MultiPlayLogic::HardDrop(PlayerSide side)
     auto* cur = m_CurMino[i].get();
 
     int dropped = 0;
-    while (TryMove(side, 0, 1))
+    while (TryMove(side, 0, -1))
         ++dropped;
 
     if (dropped > 0)
@@ -238,7 +294,7 @@ bool MultiPlayLogic::TrySoftDrop(Tetris::PlayerSide side)
     int i = Idx(side);
     auto* cur = m_CurMino[i].get();
 
-    if (TryMove(side, 0, +1))
+    if (TryMove(side, 0, -1))
     {
         m_Score->AddSoftDrop(1);
         m_GravityTimer->Restart();
@@ -347,7 +403,7 @@ bool MultiPlayLogic::TrySpawnMino(PlayerSide side, bool bInit)
     int i = Idx(side);
 
     Tetromino tempMino(m_Bag[i]->Peek(0));
-    tempMino.SetPos(BOARD_WIDTH / 2, 1);
+    tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
     if (m_Board[i]->IsCollide(tempMino, 0, 0))
     {
@@ -356,7 +412,7 @@ bool MultiPlayLogic::TrySpawnMino(PlayerSide side, bool bInit)
     }
 
     m_CurMino[i] = std::make_unique<Tetromino>(m_Bag[i]->Next());
-    m_CurMino[i]->SetPos(BOARD_WIDTH / 2, 1);
+    m_CurMino[i]->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
     m_CurMino[i]->SetRotation(Tetris::Rotation::R0);
 
     UpdatePreview(side);
@@ -404,8 +460,8 @@ void MultiPlayLogic::UpdateGhost(PlayerSide side)
         return;
 
     m_GhostMino[i] = std::make_unique<Tetromino>(*m_CurMino[i]);
-    while (!m_Board[i]->IsCollide(*m_GhostMino[i], 0, +1))
-        m_GhostMino[i]->SetPos(m_GhostMino[i]->GetX(), m_GhostMino[i]->GetY() + 1);
+    while (!m_Board[i]->IsCollide(*m_GhostMino[i], 0, -1))
+        m_GhostMino[i]->SetPos(m_GhostMino[i]->GetX(), m_GhostMino[i]->GetY() - 1);
 }
 
 void MultiPlayLogic::UpdatePreview(PlayerSide side)

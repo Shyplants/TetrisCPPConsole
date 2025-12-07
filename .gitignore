@@ -2,6 +2,8 @@
 *.exe
 *.dll
 *.pdb
+*.ilk
+*.tlog/
 /Debug/
 /Release/
 /x64/

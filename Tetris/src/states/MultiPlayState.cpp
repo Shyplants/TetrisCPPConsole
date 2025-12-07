@@ -184,11 +184,11 @@ void MultiPlayState::ProcessInputs()
     }
     else if (m_Keyboard.IsKeyJustPressed(KEY_UP))
     {
-        m_Logic->TryRotateCW(Side::Local);
+        m_Logic->TryRotate(Side::Local, true);
     }
     else if (m_Keyboard.IsKeyJustPressed(KEY_Z))
     {
-        m_Logic->TryRotateCCW(Side::Local);
+        m_Logic->TryRotate(Side::Local, false);
     }
     else if (m_Keyboard.IsKeyJustPressed(KEY_SPACE))
     {

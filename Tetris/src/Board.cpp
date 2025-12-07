@@ -51,7 +51,7 @@ const bool Board::IsCollide(const Tetromino& t, int dx, int dy, Tetris::Rotation
 	auto blocks = GetBlocks(t.GetType(), rot);
 	const int x0 = t.GetX() + dx;
 	const int y0 = t.GetY() + dy;
-	for (auto block : blocks)
+	for (auto& block : blocks)
 	{
 		const int x = x0 + block.x;
 		const int y = y0 + block.y;
@@ -67,6 +67,18 @@ const bool Board::IsCollide(const Tetromino& t, int dx, int dy, Tetris::Rotation
 const bool Board::IsCollide(const Tetromino& t, int dx, int dy) const
 {
 	return IsCollide(t, dx, dy, t.GetRotation());
+}
+
+const bool Board::IsCollide(const std::array<Vec2, Tetris::MINO_COUNT>& t) const
+{
+	for (auto& pos : t)
+	{
+		// 벽 or 바닥 or 이미 다른 블록 존재
+		if (OOB(pos.x, pos.y) || Get(pos.x, pos.y) != 0)
+			return true;
+	}
+
+	return false;
 }
 
 void Board::Lock(const Tetromino& t)
@@ -85,7 +97,7 @@ void Board::Lock(const Tetromino& t)
 const int Board::ClearFullLines()
 {
 	int cleared = 0;
-	for (int y = m_Height - 1; y >= 0; --y)
+	for (int y = 0; y < m_Height-1;)
 	{
 		bool full = true;
 		for (int x = 0; x < m_Width; ++x)
@@ -102,18 +114,21 @@ const int Board::ClearFullLines()
 			++cleared;
 
 			// 위에서 한줄 씩 내리기
-			for (int yy = y; yy > 0; --yy)
+			for (int yy = y; yy < m_Height-1; ++yy)
 			{
 				for (int x = 0; x < m_Width; ++x)
-					Set(x, yy, Get(x, yy - 1));
+					Set(x, yy, Get(x, yy + 1));
 			}
-			
-			// 맨 위는 비우기
-			for (int x = 0; x < m_Width; ++x)
-				Set(x, 0, 0);
-
-			++y; // 같은 y를 다시 검사(내려온 줄 검사)
 		}
+		else
+			++y;
+	}
+
+	if (cleared)
+	{
+		// 맨 위는 비우기
+		for (int x = 0; x < m_Width; ++x)
+			Set(x, m_Height-1, 0);
 	}
 
 	return cleared;

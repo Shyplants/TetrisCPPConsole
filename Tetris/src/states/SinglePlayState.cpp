@@ -84,7 +84,7 @@ void SinglePlayState::Update()
 	// 중력 낙하
 	if (m_GravityTimer->ElapsedMS() >= GravityIntervalMS())
 	{
-		if (!TryMove(0, +1))
+		if (!TryMove(0, -1))
 		{
 			LockAndProceed();
 		}
@@ -125,7 +125,7 @@ void SinglePlayState::ProcessInputs()
 
 	if (m_Keyboard.IsKeyJustPressed(KEY_UP))
 	{
-		if (TryRotateCW())
+		if (TryRotate(true))
 		{
 
 		}
@@ -133,7 +133,7 @@ void SinglePlayState::ProcessInputs()
 
 	if (m_Keyboard.IsKeyJustPressed(KEY_Z))
 	{
-		if (TryRotateCCW())
+		if (TryRotate(false))
 		{
 		}
 	}
@@ -141,7 +141,7 @@ void SinglePlayState::ProcessInputs()
 	else if (m_Keyboard.IsKeyJustPressed(KEY_DOWN) ||
 		(m_Keyboard.IsKeyHeld(KEY_DOWN) && m_SoftDropTimer->ElapsedMS() >= GameConfig::SoftDropIntervalMS))
 	{
-		if (TryMove(0, +1))
+		if (TryMove(0, -1))
 		{
 			m_SoundManager.PlaySE_Force("move");
 			m_Score->AddSoftDrop(1);
@@ -192,7 +192,7 @@ bool SinglePlayState::TrySpawnMino()
 {
 	// 다음 미노 스폰시 충돌 발생하는지 검사
 	Tetromino tempMino(m_Bag->Peek(0));
-	tempMino.SetPos(BOARD_WIDTH / 2, 1);
+	tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT-2);
 
 	if (m_Board->IsCollide(tempMino, 0, 0))
 	{
@@ -204,7 +204,7 @@ bool SinglePlayState::TrySpawnMino()
 
 	// 중앙 상단 스폰
 	m_CurMino->SetRotation(Tetris::Rotation::R0);
-	m_CurMino->SetPos(BOARD_WIDTH / 2, 1);
+	m_CurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 	m_GravityTimer->Restart();
 
@@ -227,7 +227,7 @@ bool SinglePlayState::TryMove(int dx, int dy)
 	return true;
 }
 
-bool SinglePlayState::TryRotateCW()
+bool SinglePlayState::TryRotate(bool cw)
 {
 	if (!m_CurMino)
 	{
@@ -235,36 +235,98 @@ bool SinglePlayState::TryRotateCW()
 		return false;
 	}
 
-	const Tetris::Rotation prevRot = m_CurMino->GetRotation();
-	m_CurMino->RotateCW();
+	bool ret = false;
+	Vec2 should_offset{};
+	auto curRotation = m_CurMino->GetRotation();
+	auto nextRotation = cw ? Tetris::NextCW(curRotation) : Tetris::NextCCW(curRotation);
+	auto rotateBlocks = m_CurMino->GetBlocks(nextRotation);
+	for (auto& block : rotateBlocks)
+		block = block + m_CurMino->GetPos();
 
-	if (m_Board->IsCollide(*m_CurMino, 0, 0))
+	switch (m_CurMino->GetType())
 	{
-		m_CurMino->SetRotation(prevRot);
+	case Tetris::TetrominoType::J:
+	case Tetris::TetrominoType::L:
+	case Tetris::TetrominoType::S:
+	case Tetris::TetrominoType::T:
+	case Tetris::TetrominoType::Z:
+	{
+		auto offsetData = Tetromino::Get_JLSTZ_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::JLSTZ_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_Board->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+	case Tetris::TetrominoType::I:
+	{
+		auto offsetData = Tetromino::Get_I_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::I_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_Board->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+
+	case Tetris::TetrominoType::O:
+	{
+		auto offsetData = Tetromino::Get_O_OffsetData();
+
+		// test
+		for (int i = 0; i < Tetris::O_OFFSET_COUNT; ++i)
+		{
+			auto offset = offsetData[(size_t)curRotation][i] - offsetData[(size_t)nextRotation][i];
+			auto testBlocks = rotateBlocks;
+			for (int j = 0; j < Tetris::MINO_COUNT; ++j)
+				testBlocks[j] = rotateBlocks[j] + offset;
+
+			if (!m_Board->IsCollide(testBlocks))
+			{
+				ret = true;
+				should_offset = offset;
+				break;
+			}
+		}
+
+		break;
+	}
+	default:
 		return false;
 	}
 
-	return true;
-}
-
-bool SinglePlayState::TryRotateCCW()
-{
-	if (!m_CurMino)
+	if (ret)
 	{
-		TETRIS_LOG("m_CurMino is not valid!");
-		return false;
+		m_CurMino->SetPos(m_CurMino->GetX() + should_offset.x, m_CurMino->GetY() + should_offset.y);
+		m_CurMino->Rotate(cw);
 	}
 
-	const Tetris::Rotation prevRot = m_CurMino->GetRotation();
-	m_CurMino->RotateCCW();
-
-	if (m_Board->IsCollide(*m_CurMino, 0, 0))
-	{
-		m_CurMino->SetRotation(prevRot);
-		return false;
-	}
-
-	return true;
+	return ret;
 }
 
 bool SinglePlayState::TryHold()
@@ -286,7 +348,7 @@ bool SinglePlayState::TryHold()
 	{
 		// 홀드 미노와 스왑시 충돌 발생하는지 검사
 		Tetromino tempMino(m_holdMinoType);
-		tempMino.SetPos(BOARD_WIDTH / 2, 1);
+		tempMino.SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		if (m_Board->IsCollide(tempMino, 0, 0))
 		{
@@ -298,7 +360,7 @@ bool SinglePlayState::TryHold()
 		// 현재 미노를 홀드 타입으로 교체 및 초기화
 		m_CurMino->SetType(m_holdMinoType);
 		m_CurMino->SetRotation(Tetris::Rotation::R0);
-		m_CurMino->SetPos(BOARD_WIDTH / 2, 1);
+		m_CurMino->SetPos(BOARD_WIDTH / 2, BOARD_HEIGHT - 2);
 
 		m_holdMinoType = oldMinoType;
 	}
@@ -317,7 +379,7 @@ void SinglePlayState::HardDrop()
 	}
 
 	int dropped = 0;
-	while (TryMove(0, +1))
+	while (TryMove(0, -1))
 		++dropped;
 
 	if (dropped > 0)
@@ -391,8 +453,8 @@ void SinglePlayState::UpdateGhostMino()
 	m_GhostMino = std::make_unique<Tetromino>(*m_CurMino);
 
 	// 가능한 아래로 이동
-	while (!m_Board->IsCollide(*m_GhostMino, 0, +1))
-		m_GhostMino->SetPos(m_GhostMino->GetX(), m_GhostMino->GetY() + 1);
+	while (!m_Board->IsCollide(*m_GhostMino, 0, -1))
+		m_GhostMino->SetPos(m_GhostMino->GetX(), m_GhostMino->GetY() - 1);
 }
 
 void SinglePlayState::OnComboAchieved(int comboCount)

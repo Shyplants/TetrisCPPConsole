@@ -71,6 +71,10 @@ namespace Tetris
     constexpr int MINO_PREVIEW_COUNT = 5;
     constexpr int MINO_TYPE_COUNT = 7;
 
+    constexpr int JLSTZ_OFFSET_COUNT = 5;
+    constexpr int I_OFFSET_COUNT = 5;
+    constexpr int O_OFFSET_COUNT = 1;
+
     // --------------------------------------------------------------------
     //  TetrominoType → 색상 변환
     // --------------------------------------------------------------------

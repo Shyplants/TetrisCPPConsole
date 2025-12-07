@@ -26,12 +26,14 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 	// 보드에 배치된 미노 그리기
 	const int width = board.GetWidth();
 	const int height = board.GetHeight();
-
+	
+	// 월드 좌표계 <-> 콘솔 좌표계 (y축 반전 필요)
 	for (int y = 0; y < height; ++y)
 	{
 		for (int x = 0; x < width; ++x)
 		{
 			auto minoType = board.Get(x, y);
+			auto yOffset = m_BoardTop + height - 1;
 
 			// (x,y)번째 칸에 미노의 블럭이 존재
 			if (minoType > 0)
@@ -39,7 +41,7 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 				const int color = board.GetCellColor(x, y);
 				assert(color > 0 && "color is not valid!");
 
-				m_Console.Write(m_BoardLeft + x * 2, m_BoardTop + y, L"█", color);
+				m_Console.Write(m_BoardLeft + x * 2, yOffset - y, L"█", color);
 			}
 		}
 	}
@@ -48,13 +50,14 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 	if (ghostMino)
 	{
 		const int color = ghostMino->GetColor();
-		for (auto b : ghostMino->GetBlocks())
+		auto yOffset = m_BoardTop + height - 1;
+		for (auto& b : ghostMino->GetBlocks())
 		{
 			int gx = ghostMino->GetX() + b.x;
 			int gy = ghostMino->GetY() + b.y;
 			if (!board.OOB(gx, gy))
 			{
-				m_Console.Write(m_BoardLeft + gx * 2, m_BoardTop + gy, L"▒", static_cast<WORD>(color));
+				m_Console.Write(m_BoardLeft + gx * 2, yOffset - gy, L"▒", static_cast<WORD>(color));
 			}
 		}
 	}
@@ -63,13 +66,14 @@ void ConsoleRenderer::DrawBoard(const Board& board, const Tetromino* curMino, co
 	if (curMino)
 	{
 		int color = curMino->GetColor();
-		for (auto b : curMino->GetBlocks())
+		auto yOffset = m_BoardTop + height - 1;
+		for (auto& b : curMino->GetBlocks())
 		{
 			int gx = curMino->GetX() + b.x;
 			int gy = curMino->GetY() + b.y;
 			if (!board.OOB(gx, gy))
 			{
-				m_Console.Write(m_BoardLeft + gx * 2, m_BoardTop + gy, L"█", static_cast<WORD>(color));
+				m_Console.Write(m_BoardLeft + gx * 2, yOffset - gy, L"█", static_cast<WORD>(color));
 			}
 		}
 	}
@@ -129,6 +133,7 @@ void ConsoleRenderer::DrawPreviewPanel(const std::array<Tetris::TetrominoType, T
 		{
 			// b.x: [-1..3)
 			// b.y: [0..2)
+			b.y = -b.y + 1;
 			slotColors[b.y * 4 + (b.x + 1)] = color;
 		}
 
@@ -235,7 +240,7 @@ void ConsoleRenderer::Draw4x2Mino(int x, int y, const std::array<Vec2, MINO_COUN
 		// b.y: [0..2)
 
 		int dx = b.x + 1;
-		int dy = b.y;
+		int dy = -b.y + 1;
 		if (0 <= dx && dx < 4 && 0 <= dy && dy < 2)
 		{
 			slot[dy * 4 + dx] = color;

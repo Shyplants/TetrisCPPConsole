@@ -7,6 +7,14 @@ struct Vec2
 	int x{}, y{};
 };
 
+inline const Vec2 operator+(const Vec2& lhs, const Vec2& rhs) {
+	return Vec2({ lhs.x + rhs.x, lhs.y + rhs.y });
+}
+
+inline const Vec2 operator-(const Vec2& lhs, const Vec2& rhs) {
+	return Vec2({ lhs.x - rhs.x, lhs.y - rhs.y });
+}
+
 constexpr int BOARD_WIDTH = 10;
 constexpr int BOARD_VISIBLE_HEIGHT = 20;
 constexpr int BOARD_HIDDEN_HEIGHT = 3;

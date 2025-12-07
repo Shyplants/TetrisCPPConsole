@@ -24,14 +24,9 @@ void Tetromino::SetRotation(Tetris::Rotation r)
 	m_Rotation = r;
 }
 
-void Tetromino::RotateCW()
+void Tetromino::Rotate(bool cw)
 {
-	m_Rotation = Tetris::NextCW(m_Rotation);
-}
-
-void Tetromino::RotateCCW()
-{
-	m_Rotation = Tetris::NextCCW(m_Rotation);
+	m_Rotation = cw ? Tetris::NextCW(m_Rotation) : Tetris::NextCCW(m_Rotation);
 }
 
 const std::array<Vec2, MINO_COUNT> Tetromino::GetBlocks() const
@@ -41,6 +36,15 @@ const std::array<Vec2, MINO_COUNT> Tetromino::GetBlocks() const
 	assert((0 <= typeIndex && typeIndex < Tetris::MINO_TYPE_COUNT) && "Invalid typeIndex");
 
 	return Shapes[typeIndex][static_cast<size_t>(m_Rotation)];
+}
+
+const std::array<Vec2, Tetris::MINO_COUNT> Tetromino::GetBlocks(Tetris::Rotation rotation) const
+{
+	// [0...7)
+	const int typeIndex = static_cast<size_t>(m_Type) - 1;
+	assert((0 <= typeIndex && typeIndex < Tetris::MINO_TYPE_COUNT) && "Invalid typeIndex");
+
+	return Shapes[typeIndex][static_cast<size_t>(rotation)];
 }
 
 const int Tetromino::GetColor() const

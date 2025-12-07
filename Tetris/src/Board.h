@@ -29,6 +29,8 @@ public:
 	// 미노를 (dx, dy, rot)만큼 이동/회전 했을 때 충돌하는지 여부 반환
 	const bool IsCollide(const Tetromino& t, int dx, int dy, Tetris::Rotation rot) const;
 	const bool IsCollide(const Tetromino& t, int dx, int dy) const;
+
+	const bool IsCollide(const std::array<Vec2, Tetris::MINO_COUNT>& t) const;
 	
 	// 미노를 보드에 고정
 	void Lock(const Tetromino& t);
